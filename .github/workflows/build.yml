@@ -17,7 +17,8 @@ jobs:
         run: if [ -f shipsim.zip ]; then unzip -o -q shipsim.zip -d .; fi
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK licenties
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - name: Bouw APK
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
       - name: APK bij de website zetten
