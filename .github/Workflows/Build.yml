@@ -1,0 +1,36 @@
+name: Bouw Ship Sim
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency: { group: pages, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pak shipsim.zip uit (als die er is)
+        run: if [ -f shipsim.zip ]; then unzip -o -q shipsim.zip -d .; fi
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - name: Bouw APK
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - name: APK bij de website zetten
+        run: cp app/build/outputs/apk/debug/app-debug.apk web/shipsim.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: shipsim-apk, path: web/shipsim.apk }
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: '${{ steps.d.outputs.page_url }}' }
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
